@@ -118,12 +118,11 @@ These are concrete implementations of the product interface or the abstract clas
 
 If we apply all of the above components to our scenario, we end up with the following:
 
-uml-scenario
+UML - (Please refer Factory_UML1 Image)
 
 The above class diagram demonstrates the class diagram applied to our scenario.
 The complete implementation of the code is available in the `View Code`` section above.
 
-import java.util.ArrayList;
 enum Burgers {
   CHEESE,
   DELUXECHEESE,
@@ -207,7 +206,17 @@ In the example above, we only had two different kind of burgers per factory, but
 
 We saw how meticulous we had to be with the set up of the factory method. The factory pattern is deeply embedded into our system and it will require a lot of effort to replace it if in the future we decide to use some other implementation.
 
-Click here for some additional remarks on the downsides
+Some additional remarks on the downsides:
+
+You might be thinking to yourself: if it leads to increased complexity and is hard to refactor, how is it good design? Remember though, design patterns are best practices that have evolved from solving recurring problems in design. 
+We use them because we don't want to re-invent the wheel. 
+
+Still, they are not one-size-fit-all and the applicability depends on the context. In other words, just because a design pattern can be applied, does not mean it should be applied.
+
+What if performance is very critical to the system? 
+Design patterns focus on structural, creational and behavioral problems and their core focus is to adherence to design principles. 
+So when it comes to performance, developers will need to consider trade-offs and make potential optimizations which could deviate from the classic pattern structure.
+
 Use Cases
 1. User Interface (UI) Libraries
 
