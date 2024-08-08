@@ -1,0 +1,93 @@
+Adapter
+
+The adapter pattern is a structural pattern that converts the interface of a class into another interface to make it compatible with additional clients. It allows classes to work together that couldn't otherwise because of incompatible interfaces.
+
+Motivation
+Imagine a scenario where a legacy logging system is in place that logs messages in XML format. A new, modern logging system is introduced that logs messages in JSON format.
+
+These two systems are incompatible due to their different interfaces and method names. The objective is to make these two different systems work together seamlessly.
+
+This is where the Adapter Pattern comes into play. An adapter can be created to bridge the gap between the two systems. The adapter will handle the conversion of method calls, making it appear as though the two systems were always compatible. This way, both the old and new loggers can be used concurrently without any issues.
+
+The beauty of this pattern is that from the perspective of the client code, nothing changes - the interface and method names are unchanged. The adapter is what takes care of ensuring compatibility.
+
+Before we jump into the design of the adapter pattern, let's consider a candidate solution and where it falls short.
+
+1. Merging the Codebase
+
+One potential solution is to merge the codebases of the old and new loggers, combining their functionality into a unified system. This might simplify calls and usage initially.
+
+However, this approach has significant drawbacks that make it impractical. It violates the single responsibility principle because now it's not just logging messages, but also converting data formats and deciding which logger to use. Another aspect to consider is the time and effort to perform the merge, which can be considerable depending on the size and the complexity of the codebase.
+
+The solution
+The adapter design pattern contains the following components:
+
+1. Target Interface: This is the interface that the new system adheres to and what the client code is written against.
+
+2. Adaptee: This is the existing component (legacy logger) that does not conform to the Target interface. We are adapting this component to the Target interface. Note that its functionality remains unaltered - it will do what it has always done.
+
+3. Adapter: This is the class bridging the gap between the Target and the Adaptee. It implements the Target interface, providing compatibility between the new and old systems. It translates calls from the Target interface to the Adaptee, ensuring that the Adaptee can be used as if it were the new system.
+
+4. Client: The client expects to work with objects of the Target type. The client is unaware of the Adapter or the Adaptee. From its own perspective, the client is simply interacting with the Target interface.
+
+Design and Implementation
+The class diagram below demonstrates the structure as it would be implemented in Java, considering not every language has an interface. Still, this diagram can be easily translated to code in any language.
+
+adapter-uml (Please refer from adapter_uml image here)
+
+UML class diagram of our adapter pattern.
+Using the class diagram above, our code implementation becomes straightforward:
+
+interface JSONLogger {
+  void logMessage(String message);
+}
+class XMLLogger {
+  public void log(String XMLMessage) {
+    System.out.println(XMLMessage);
+  }
+}
+class LoggerAdapter implements JSONLogger {
+  private final XMLLogger XMLLogger;
+
+  public LoggerAdapter(XMLLogger XMLLogger) {
+    this.XMLLogger = XMLLogger;
+  }
+
+  @Override
+  public void logMessage(String message) {
+    XMLLogger.log(message);
+  }
+}
+class Main {
+  public static void main(String[] args) {
+    JSONLogger logger = new LoggerAdapter(new XMLLogger());
+    logger.logMessage("<message>hello</message>");
+  }
+}
+Limitations and Pitfalls
+We have to remember that while the adapter is a scalable solution, it does have its downsides. Below are two important ones.
+
+1. Performance Overhead - Adding an adapter introduces an extra layer of complexity, which can lead to performance overhead. This might not be a significant issue for many applications, but in systems where performance is critical, it can introduce unwanted delays.
+
+The adapter can add additional method calls and potentially complex data conversion processes, all of which can impact the system’s overall efficiency and response time. In the demonstrated example, the conversion process is rather simple, but in large, performance-critical systems like real-time trading platforms, the adapter might need to handle multitude of tasks beyond just conversion. In cases like these, the adapter must be designed meticulously to ensure the adapter does not become a bottle neck.
+
+2. Complexity and Maintainability - Since introducing adapters introduces complexity to the system, if the legacy system has several components and each one of the components requires a separate adapter, any updates that take place in the legacy system might also need to be reflected in the respective adapters. This can lead to challenges when it comes to maintenance.
+
+Use Cases
+1. Legacy System Integration - When modern systems need to interact with older systems, an adapter can be used to translate calls between the two without having to alter the legacy system's code.
+
+2. Payment Gateways - E-commerce applications may want to support multiple payment gateways (like PayPal, Stripe, or Square). An adapter for each payment provider can be developed to ensure a uniform payment process.
+
+3. UI Widgets in Frameworks - Many GUI frameworks allow developers to create custom UI widgets. If we want to integrate custom widgets, adapters will ensure that the widget conforms to the expected interface of the framework.
+
+4. Cross-Platform Compatibility - In applications that need to operate across multiple platforms (e.g., Windows, macOS, Linux), adapters can be employed to handle platform-specific operations, ensuring that the main application code remains platform-agnostic.
+
+Suppose a phone uses a USB-C port for charging and data transfer, but only a traditional USB-A port is available on the computer or wall charger. In this situation, a USB-A to USB-C adapter can be used to bridge the connection, allowing the phone to be charged via the USB-A port. This is a real-world example of the adapter pattern.
+Closing Notes
+The adapter pattern helps us effectively achieve the following:
+
+1. Promotes Single Responsibility Principle (SRP): The LoggerAdapter is solely responsible for bridging the discrepancies between the old logger and the modern logger. Just as an example, the JSONLogger interface will only need to change if and only if there is a need to update and enhance the logging interface in the modern system.
+
+2. Ensures Open/Closed Principle (OCP): The design is open for extension but closed for modification. With the LoggerAdapter in place, we are not modifying any of the classes directly. Instead, if there is ever a need for a change, we will add new functionality by extending the interface or adding new methods to ensure backwards compatibility.
+
+3. Facilitates loose coupling: The adaptern pattern promotes loose coupling by allowing classes to work together without being directly interconnected. The client class interacts with an adapter class, which in turn communicates with the adaptee class. This arrangement means that changes to the adaptee (legacy system) do not necessitate changes in the client. Furthermore, as new systems are developed, new adapters can be easily implemented without affecting existing code.
