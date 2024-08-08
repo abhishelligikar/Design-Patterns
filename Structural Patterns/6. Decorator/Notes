@@ -1,0 +1,228 @@
+Decorator
+
+The decorator pattern is a structural design pattern that lets you attach new behaviors to objects by encapsulating these objects inside wrapper classes that contain these behaviors. It's useful when we need to add responsibilities to individual objects dynamically without affecting other objects.
+
+Some languages even have decorators built-in as native features. However, in this lesson we will be implementing it from scratch.
+
+Motivation
+Suppose that we are ordering coffee. We start off with the basic coffee and then we add additions like espresso, creamer and foam. All of these items come at an additional price and enhance the coffee.
+
+From a software perspective, the challenge we are presented with is that how do we design a system that can handle a dynamic and ever-changing nature of the coffee order? What if we decide we want to two shots of espresso instead of one. What about extra foam?
+
+Let's look at two candidate solutions:
+
+1. God class
+
+One possible solution is to handle all the beverages and all the condiments in one class. This single class is responsible for all aspects of the program. This way, the class not only handles the base coffee but also takes care of adding condiments, removing condiments and calculating the overall cost of the coffee. This may require us to have a set of boolean values that are responsible for maintaining the state and the overall cost of the coffee, all within the same class.
+
+For a project with little to no scale, this class might be fine but is really a code smell, which we will discuss later. It ends up losing flexibility as we try and add more features to it. For example, calculating the cost becomes more difficult as more condiments are added.
+
+This will create a gigantic bloated class, and just to calculate the cost, we will need to add lot of if statements. The god class solution would look like the following.
+
+public class Beverage {
+
+    private boolean hasMilk;
+    private boolean hasSugar;
+
+    public void addMilk() {
+        this.hasMilk = true;
+    }
+
+    public void addSugar() {
+        this.hasSugar = true;
+    }
+
+    public double cost() {
+        double cost = 1.00; // base cost of a beverage
+        if (hasMilk) cost += 0.50;
+        if (hasSugar) cost += 0.25;
+        return cost;
+    }
+}
+As you can see, this will get messy really fast.
+
+This approach also has tight coupling because all the functionalities are intertwined in one class. This violates the single responsibility and separation of concerns principle.
+
+Furthermore, a God Class has tight coupling and all the functionalities are intertwined, making the system fragile and harder to debug and test.
+
+A god class is what is known as an anti-pattern when there is too much going on in one class or it "knows" too much. We mentioned it so that you can understand it is a solution riddled with issues and should be avoided in modern OOD.
+2. Add new functionality through inheritance
+
+A solution that might make more sense after looking at the god class solution is to create a superclass Beverage and create subclass for every other combination.
+
+If we want to add milk or sugar, we can create separate subclasses and override their cost methods accordingly. This is actually not bad design... if there were only a handful of combinations and no additional condiments could ever be added. But condiments change and this approach will create a combinatorial explosion of classes, leading to very inflexible design.
+
+Below is what such design might look like.
+
+public class Beverage {
+    public double cost() {
+        return 1.00;
+    }
+}
+
+public class BeverageWithMilk extends Beverage {
+    public double cost() {
+        return super.cost() + 0.50;
+    }
+}
+
+public class BeverageWithMilkAndSugar extends BeverageWithMilk {
+    public double cost() {
+        return super.cost() + 0.25;
+    }
+}
+
+// ... and an explosion of classes
+The solution
+The decorator pattern provides us with a more dynamic and flexible approach, especially compared to the aforementioned candidate solutions.
+
+It allows us to add and modify attributes and behaviors at runtime. The decorator pattern follows the principle, "favor composition over inheritance", meaning our coffee HAS-A decorator, and once a decorator has been added, another decorator can be added, and another and so on and so forth.
+
+Now, we are not tied to an IS-A relationship, which is what inheritance provides. Composition offers far more flexibility. Instead of our drink being a DoubleEspressoDarkRoast, our coffee has two shots of espresso and one foam. As we discussed in the Strategy pattern lesson, it is far easier to change something you have than something you are.
+
+Using composition, we can "wrap" our coffee with all sorts of decorators. Not only this, but we can also make the decorators and the components interchangeable because both the components and decorators will implement the same interface/inherit from the same base abstract class (this can be a problem as well if the interface is too broad but we will discuss that later). This allows us dynamic and modular augmentation of behavior.
+
+Design and Implementation
+The decorator pattern typically has the following components:
+
+Component (abstract class or interface): This is the abstract class or interface that both the abstract decorator and concrete component will implement/extend. This is how both the concrete components and the decorators become interchangeable.
+ConcreteComponent: This is the concrete implementation which extends the component class and will provide an implementation to all the methods in the Component class. The methods can be altered by the decorators.
+Decorator(abstract class): This is the base decorator class, which will be extended by the concrete decorators. It consists of a HAS-A reference to the Component class/interface.
+ConcreteDecorator: The concrete decorators will be the ones providing a concrete implementation to the base abstract decorators. They can be added dynamically at runtime and they override the base decorators' behavior.
+A general design can be conceptualized like the following.
+
+decorator-template
+
+The concrete components don't need a reference to the abstract component because they are the base components that are being decorated themselves. We cannot decorate an abstract Beverage, but we can decorate a dark roast coffee.
+In the example we are about to implement below, we have a base light roast coffee and we wish to add a shot of espresso, one cream, and foam to it. Our decorators (espresso, cream and foam) mirror the object they are composed of, which is the Beverage. As a result, they can override the cost method, which allows us to add the cost of each additional decorator to the total cost so far, making adding and removing decorators at runtime very simple. We can apply the template above to the example we have been talking about so far. The implementation is rather simple if we follow the template.
+
+The UML diagram below demonstrates the design and implementation as it would be done in Java. However, as we mentioned before, UML is language agnostic and this design can be implemented in any language.
+
+decorator-template
+
+UML class diagram of our decorator pattern.
+Following the above components and steps, the code implementation becomes rather simple.
+
+abstract class Beverage {
+  abstract double cost();
+  abstract String description();
+}
+class DarkRoast extends Beverage {
+  @Override
+  public double cost() {
+    return 3.45;
+  }
+
+  @Override
+  public String description() {
+    return "Dark Roast";
+  }
+}
+class LightRoast extends Beverage {
+
+  @Override
+  public double cost() {
+    return 3.45;
+  }
+
+  @Override
+  public String description() {
+    return "Light Roast";
+  }
+}
+abstract class BeverageDecorator extends Beverage {
+
+  protected Beverage beverage;
+
+  public BeverageDecorator(Beverage beverage) {
+    this.beverage = beverage;
+  }
+}
+class EspressoDecorator extends BeverageDecorator {
+
+  public EspressoDecorator(Beverage beverage) {
+    super(beverage);
+  }
+
+  @Override
+  public double cost() {
+    return 0.5 + beverage.cost();
+  }
+
+  @Override
+  public String description() {
+    return beverage.description() + ", Espresso";
+  }
+}
+class CreamDecorator extends BeverageDecorator {
+
+  public CreamDecorator(Beverage beverage) {
+    super(beverage);
+  }
+
+  @Override
+  public double cost() {
+    return 0.3 + beverage.cost();
+  }
+
+  @Override
+  public String description() {
+    return beverage.description() + ", Cream";
+  }
+}
+class FoamDecorator extends BeverageDecorator {
+
+  public FoamDecorator(Beverage beverage) {
+    super(beverage);
+  }
+
+  @Override
+  public double cost() {
+    return 0.2 + beverage.cost();
+  }
+
+  @Override
+  public String description() {
+    return beverage.description() + ", Foam";
+  }
+}
+class Main {
+
+  public static void main(String[] args) {
+    Beverage beverage = new FoamDecorator(
+      new CreamDecorator(new EspressoDecorator(new LightRoast()))
+    );
+    System.out.println(beverage.description()); // Light Roast, Espresso, Cream, Foam
+    System.out.println(beverage.cost()); // 4.45
+  }
+}
+coffee-visualized
+
+The visual above demonstrates how flexible our design is with the decorator pattern.
+Limitations and Pitfalls
+1. Might violate interface segregation principle - As we saw, the decorator pattern requires the decorated component and the decorator itself to adhere to the same interface. If the interface is broad and has methods that the decorator does not need, the decorator will be forced to implement all these methods, which is a violation of the interface segregation principle. The interface segregation principles tells us that no client should be forced to depend on methods it does not use. It is encouraged to use multiple, client-specific interfaces rather than one general-purpose interface, promoting the decoupling of systems.
+
+2. Increases complexity - Every single time we add a new decorator, we add a new layer of abstraction, which can make the code harder to understand, especially when onboarding new developers. This is especially true when multiple decorators are added or even nested.
+
+Use Cases
+1. Point of Sale Systems - As discussed in our example, point of sale systems can make use of the decorator design pattern to compute the cost of the overall purchase, with discounts and add-ons etc.
+
+2. Graphical User Interfaces - The decorator pattern is very common when adding visual or behavior functionalities to GUI components dynamically. For example, making a window scrollable, adding borders, colors and modifying fonts, etc all can be achieved through decorators.
+
+3. Middleware in Web Development - Implementing middleware to augment request and response objects in web frameworks by adding functionalities like authentication, authorization, logging and error handling.
+
+Closing Notes
+With the decorator pattern, we effectively achieve the following:
+
+1. Open/Closed Principle - Software entities should be open for extension but closed for modification. With our example, we have made it easy to add new features on the fly. For example, if we decided to add an whipped cream decorator, we can just add a new decorator by extension.
+
+2. Composition over Inheritance - The decorator enhances flexibility as decorators can be combined in various ways to produce diversified functionality, avoiding the need for an extensive hierarchy of subclasses. By isolating each feature or behavior in its own class, it also avoids the diamond problem.
+
+3. Single Responsibility Principle - Each decorator class is responsible for adding or altering a specific aspect or behavior of a component. This modular approach makes the code more maintainable and understandable, as changes to one aspect of functionality require modifications to that specific decorator class, without impacting other areas of the codebase.
+
+The diamond problem - If there is a method in A that B and C have overridden, and D does not override it, then which version of the method does D inherit: that of B, or that of C? Each language has its own way of dealing with this and while it is not bad design per se, it generally is discouraged. This is why we favor composition over inheritance.
+       A
+      / \
+     B   C
+      \ /
+       D
